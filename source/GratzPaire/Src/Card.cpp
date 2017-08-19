@@ -28,7 +28,7 @@ namespace gratz_paire
 	{
 		static Quaternion const src{ Quaternion::fromAxisAngle( Point3r{ 0, 0, 0 }, 0.0_degrees ) };
 		static Quaternion const dst{ Quaternion::fromAxisAngle( Point3r{ 1, 0, 0 }, 180.0_degrees ) };
-		static Milliseconds const time{ 1000_ms };
+		static Milliseconds const time{ 500_ms };
 
 		if ( isHidden() )
 		{

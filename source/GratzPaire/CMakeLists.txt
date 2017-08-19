@@ -64,6 +64,18 @@ if( wxWidgets_FOUND AND GTK2_FOUND )
 		${PROJECTS_BINARIES_OUTPUT_DIR_DEBUG}
 	)
 
+	if ( WIN32 )
+		include( InstallRequiredSystemLibraries )
+		get_filename_component( FmodLibPath ${Fmod_LIBRARY} PATH )
+		get_filename_component( FmodLibPath ${FmodLibPath} PATH )
+		if ( ${PROJECTS_PLATFORM} STREQUAL "x86" )
+			set( FmodLibPath ${FmodLibPath}/fmodex.dll )
+		else ()
+			set( FmodLibPath ${FmodLibPath}/fmodex64.dll )
+		endif ()
+		copy_dll( ${PROJECT_NAME} ${FmodLibPath} ${FmodLibPath} )
+	endif ()
+
 	file(
 		GLOB
 			DataFiles

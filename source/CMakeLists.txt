@@ -124,9 +124,11 @@ macro( parse_subdir_files _FOLDER _GROUP )
 endmacro()
 
 find_package( Castor3D COMPONENTS CastorUtils CastorTest Castor3D GlslWriter )
+find_package( FMOD )
 
-if ( Castor3D_FOUND )
+if ( Castor3D_FOUND AND FMOD_FOUND )
 	include_directories( ${Castor3D_INCLUDE_DIRS} )
+	include_directories( ${Fmod_INCLUDE_DIR} )
 	set( CastorUtilsLibraries "")
 	foreach(Lib ${Castor3D_CastorUtils_LIBRARIES})
 		if (CastorUtilsLibraries)
@@ -156,6 +158,7 @@ if ( Castor3D_FOUND )
 		${CastorUtilsLibraries}
 		${Castor3DLibraries}
 		${GlslWriterLibraries}
+		${Fmod_LIBRARY}
 	)
 
 	if ( MSVC OR NOT "${CMAKE_BUILD_TYPE}" STREQUAL "" )
@@ -229,5 +232,10 @@ if ( Castor3D_FOUND )
 		message( SEND_ERROR "Please select a build type (Debug or Release)" )
 	endif()
 else ()
-	message( SEND_ERROR "Castor3D not found." )
+	if ( NOT Castor3D_FOUND )
+		message( SEND_ERROR "Castor3D not found." )
+	endif ()
+	if ( NOT FMOD_FOUND )
+		message( SEND_ERROR "FMOD not found." )
+	endif ()
 endif ()

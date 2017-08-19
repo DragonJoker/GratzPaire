@@ -1,4 +1,4 @@
-#include "Game.hpp"
+﻿#include "Game.hpp"
 
 #include <Animation/Interpolator.hpp>
 #include <Event/Frame/FrameListener.hpp>
@@ -39,6 +39,7 @@ namespace gratz_paire
 	Game::Game( castor3d::Scene & scene )
 		: m_scene{ scene }
 		, m_hud{ *this, scene }
+		, m_audio{}
 	{
 		m_hud.initialise();
 		m_state = State::eInitial;
@@ -146,6 +147,8 @@ namespace gratz_paire
 					if ( it->second.isRevealed()
 						&& ( ++it )->second.isRevealed() )
 					{
+						m_audio.cardSwipe();
+						m_audio.cardSwipe();
 						++m_errors;
 						m_hud.update( m_errors );
 					}
@@ -179,6 +182,7 @@ namespace gratz_paire
 				&& m_revealed.size() < 2u )
 			{
 				m_selected.emplace( geometry, Card{ geometry } );
+				m_audio.cardSwipe();
 			}
 		}
 	}

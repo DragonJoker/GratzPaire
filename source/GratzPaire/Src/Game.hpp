@@ -1,12 +1,13 @@
-/**
+﻿/**
 See licence file in root folder, MIT.txt
 */
 #pragma once
 #ifndef ___EFO_Game_HPP___
 #define ___EFO_Game_HPP___
 
-#include "Hud.hpp"
+#include "Audio.hpp"
 #include "Card.hpp"
+#include "Hud.hpp"
 
 namespace gratz_paire
 {
@@ -125,6 +126,7 @@ namespace gratz_paire
 		// key => verso, value => recto.
 		std::map< castor3d::GeometrySPtr, castor3d::GeometrySPtr > m_cards;
 		Hud m_hud;
+		Audio m_audio;
 		// Varying data.
 		Clock::time_point m_saved;
 		castor::Milliseconds m_elapsed;
