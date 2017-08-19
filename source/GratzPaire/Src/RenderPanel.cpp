@@ -173,13 +173,7 @@ namespace gratz_paire
 
 		void RenderPanel::doUpdateSelectedGeometry( castor3d::GeometrySPtr newGeometry )
 		{
-			auto oldGeometry = m_selectedGeometry.lock();
-
-			if ( newGeometry != oldGeometry )
-			{
-				m_selectedGeometry = newGeometry;
-				m_game.selectCard( newGeometry );
-			}
+			m_game.selectCard( newGeometry );
 		}
 
 		void RenderPanel::doStartTimer( TimerID id )

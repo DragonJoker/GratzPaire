@@ -78,7 +78,6 @@ namespace gratz_paire
 			std::array< wxTimer *, size_t( TimerID::eCount ) > m_timers;
 			castor3d::RenderWindowWPtr m_renderWindow;
 			castor3d::FrameListenerSPtr m_listener;
-			castor3d::GeometryWPtr m_selectedGeometry;
 			Game & m_game;
 		};
 	}

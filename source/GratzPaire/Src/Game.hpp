@@ -1,4 +1,4 @@
-﻿/**
+/**
 See licence file in root folder, MIT.txt
 */
 #pragma once
@@ -6,6 +6,7 @@ See licence file in root folder, MIT.txt
 #define ___EFO_Game_HPP___
 
 #include "Hud.hpp"
+#include "Card.hpp"
 
 namespace gratz_paire
 {
@@ -113,16 +114,25 @@ namespace gratz_paire
 
 	private:
 		void doPrepareCards();
+		void doRevealCards();
+		void doHideCards();
+		bool doIsPair();
 
 	private:
 		// Persistent data.
 		castor3d::Scene & m_scene;
 		std::vector< castor3d::SceneNodeSPtr > m_nodes;
-		std::vector< castor3d::GeometrySPtr > m_cards;
+		// key => verso, value => recto.
+		std::map< castor3d::GeometrySPtr, castor3d::GeometrySPtr > m_cards;
 		Hud m_hud;
 		// Varying data.
-		State m_state;
+		Clock::time_point m_saved;
+		castor::Milliseconds m_elapsed;
+		std::atomic< State > m_state;
 		uint32_t m_errors;
+		uint32_t m_ok;
+		std::map< castor3d::GeometrySPtr, Card > m_selected;
+		std::map< castor3d::GeometrySPtr, Card > m_revealed;
 	};
 }
 
