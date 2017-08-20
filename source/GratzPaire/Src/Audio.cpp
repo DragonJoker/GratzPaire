@@ -9,17 +9,6 @@ using namespace castor3d;
 
 namespace gratz_paire
 {
-#if defined( CASTOR_PLATFORM_WINDOWS )
-	namespace
-	{
-		bool checkError( FMOD_RESULT result )
-		{
-			REQUIRE( result == FMOD_OK );
-			return result == FMOD_OK;
-		}
-	}
-#endif
-
 	Audio::Audio()
 	{
 #if defined( CASTOR_PLATFORM_WINDOWS )
@@ -56,6 +45,11 @@ namespace gratz_paire
 #endif
 	}
 
+	void Audio::update()
+	{
+		m_system->update();
+	}
+
 	Sound & Audio::addSound( uint32_t id
 		, Sound::Type type
 		, castor::Path const & file
@@ -66,12 +60,18 @@ namespace gratz_paire
 		m_soundsById.emplace( id, &result );
 		return result;
 	}
-	
 
 	void Audio::playSound( uint32_t id )
 	{
 		auto it = m_soundsById.find( id );
 		REQUIRE( it != m_soundsById.end() );
 		it->second->play();
+	}
+
+	void Audio::stopSound( uint32_t id )
+	{
+		auto it = m_soundsById.find( id );
+		REQUIRE( it != m_soundsById.end() );
+		it->second->stop();
 	}
 }

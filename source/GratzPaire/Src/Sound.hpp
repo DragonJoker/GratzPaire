@@ -7,12 +7,16 @@ See licence file in root folder, MIT.txt
 
 #include "GratzPairePrerequisites.hpp"
 
+#include <Design/Signal.hpp>
+
 #if defined( CASTOR_PLATFORM_WINDOWS )
+#include <fmod.hpp>
 #include <fmod.hpp>
 #endif
 
 namespace gratz_paire
 {
+	bool checkError( FMOD_RESULT result );
 	/**
 	*\brief
 	*	Handles one sound.
@@ -20,6 +24,8 @@ namespace gratz_paire
 	class Sound
 	{
 	public:
+		using OnEndFunction = std::function< void() >;
+		using OnEnd = castor::Signal< OnEndFunction >;
 		enum class Type
 		{
 			eMusic,
@@ -45,6 +51,21 @@ namespace gratz_paire
 		*	Plays the sound.
 		*/
 		void play();
+		/**
+		*\brief
+		*	Stops playing the sound.
+		*/
+		void stop();
+
+	public:
+		OnEnd onPlayEnd;
+
+	private:
+		static FMOD_RESULT callback( FMOD_CHANNELCONTROL * channelControl
+			, FMOD_CHANNELCONTROL_TYPE controlType
+			, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType
+			, void * commandData1
+			, void * commandData2 );
 
 	private:
 #if defined( CASTOR_PLATFORM_WINDOWS )

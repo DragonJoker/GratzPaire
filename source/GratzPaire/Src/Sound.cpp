@@ -1,21 +1,24 @@
 ﻿#include "Sound.hpp"
 #include "Audio.hpp"
 
+#include <fmod_errors.h>
+
 using namespace castor;
 using namespace castor3d;
 
 namespace gratz_paire
 {
-#if defined( CASTOR_PLATFORM_WINDOWS )
-	namespace
+	bool checkError( FMOD_RESULT result )
 	{
-		bool checkError( FMOD_RESULT result )
+		REQUIRE( result == FMOD_OK );
+
+		if ( result != FMOD_OK )
 		{
-			REQUIRE( result == FMOD_OK );
-			return result == FMOD_OK;
+			std::cerr << FMOD_ErrorString( result ) << std::endl;
 		}
+
+		return result == FMOD_OK;
 	}
-#endif
 
 	Sound::Sound( Type type
 		, Path const & file
@@ -34,9 +37,13 @@ namespace gratz_paire
 			, &m_sound );
 		checkError( result );
 
-		if ( result && looped )
+		if ( result )
 		{
-			m_sound->setLoopCount( -1 );
+			if ( looped )
+			{
+				result = m_sound->setLoopCount( -1 );
+				checkError( result );
+			}
 		}
 #endif
 	}
@@ -57,8 +64,43 @@ namespace gratz_paire
 		if ( m_sound )
 		{
 			auto result = m_system->playSound( m_sound, nullptr, false, &m_channel );
+			m_channel->setUserData( this );
+			m_channel->setCallback( Sound::callback );
 			checkError( result );
 		}
 #endif
+	}
+
+	void Sound::stop()
+	{
+#if defined( CASTOR_PLATFORM_WINDOWS )
+		if ( m_sound )
+		{
+			auto result = m_channel->stop();
+			checkError( result );
+		}
+#endif
+	}
+
+	FMOD_RESULT Sound::callback( FMOD_CHANNELCONTROL * channelControl
+		, FMOD_CHANNELCONTROL_TYPE controlType
+		, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType
+		, void * commandData1
+		, void * commandData2 )
+	{
+		if ( controlType == FMOD_CHANNELCONTROL_CHANNEL )
+		{
+			auto channel = ( FMOD::Channel * )channelControl;
+			Sound * sound;
+			channel->getUserData( reinterpret_cast< void ** >( &sound ) );
+
+			if ( sound && callbackType == FMOD_CHANNELCONTROL_CALLBACK_END )
+			{
+				sound->onPlayEnd();
+				channel->setUserData( nullptr );
+			}
+		}
+
+		return FMOD_OK;
 	}
 }

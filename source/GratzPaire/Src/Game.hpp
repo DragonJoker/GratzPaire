@@ -132,6 +132,7 @@ namespace gratz_paire
 		std::map< castor3d::GeometrySPtr, castor3d::GeometrySPtr > m_cards;
 		Audio m_audio;
 		Hud m_hud;
+		Sound::OnEnd::connection onWinEnd;
 		// Varying data.
 		Clock::time_point m_saved;
 		castor::Milliseconds m_elapsed;

@@ -30,6 +30,11 @@ namespace gratz_paire
 		~Audio();
 		/**
 		*\brief
+		*	Updates the sound system.
+		*/
+		void update();
+		/**
+		*\brief
 		*	Creates a sound.
 		*/
 		Sound & addSound( uint32_t id
@@ -41,6 +46,11 @@ namespace gratz_paire
 		*	Plays a sound, given its ID.
 		*/
 		void playSound( uint32_t id );
+		/**
+		*\brief
+		*	Stops a sound, given its ID.
+		*/
+		void stopSound( uint32_t id );
 #if defined( CASTOR_PLATFORM_WINDOWS )
 		/**
 		*\return

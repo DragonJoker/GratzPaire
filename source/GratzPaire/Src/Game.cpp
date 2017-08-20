@@ -86,6 +86,8 @@ namespace gratz_paire
 
 	void Game::update()
 	{
+		m_audio.update();
+
 		if ( isRunning() )
 		{
 #if !defined( NDEBUG )
@@ -157,10 +159,13 @@ namespace gratz_paire
 			, Sound::Type::eSfx
 			, basePath / cuT( "GameOver.mp3" )
 			, false );
-		m_audio.addSound( uint32_t( SoundId::eWin )
+		onWinEnd = m_audio.addSound( uint32_t( SoundId::eWin )
 			, Sound::Type::eSfx
 			, basePath / cuT( "Win.mp3" )
-			, false );
+			, false ).onPlayEnd.connect( [this]()
+		{
+			m_audio.playSound( uint32_t( SoundId::eMusic ) );
+		} );
 	}
 
 	void Game::doLoadNodes()
@@ -273,6 +278,7 @@ namespace gratz_paire
 		{
 			m_state = State::eEnded;
 			m_hud.win();
+			m_audio.stopSound( uint32_t( SoundId::eMusic ) );
 			m_audio.playSound( uint32_t( SoundId::eWin ) );
 		}
 	}
