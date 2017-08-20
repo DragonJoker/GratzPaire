@@ -22,15 +22,12 @@ namespace gratz_paire
 		private:
 			void doLoadScene();
 			castor3d::RenderWindowSPtr doLoadScene( castor3d::Engine & engine
-				, castor::Path const & fileName
-				, uint32_t wantedFps
-				, bool threaded );
+				, castor::Path const & fileName );
 
 			DECLARE_EVENT_TABLE()
 			void onPaint( wxPaintEvent & event );
 			void onClose( wxCloseEvent & event );
 			void onEraseBackground( wxEraseEvent & event );
-			void onRenderTimer( wxTimerEvent & event );
 
 		private:
 			wxWindowPtr< RenderPanel > m_panel;

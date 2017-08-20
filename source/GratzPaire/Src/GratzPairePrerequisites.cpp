@@ -1,6 +1,6 @@
 ﻿#include "GratzPairePrerequisites.hpp"
 
-#if defined( CASTOR_PLATFORM_WINDOWS  ) && !defined( NDEBUG ) && !defined( VLD_AVAILABLE )
+#if defined( CASTOR_PLATFORM_WINDOWS ) && !defined( NDEBUG ) && !defined( VLD_AVAILABLE )
 #	define _CRTDBG_MAP_ALLOC
 #	include <cstdlib>
 #	include <crtdbg.h>
@@ -49,7 +49,7 @@ namespace gratz_paire
 				}
 			}
 
-			return castor3d::WindowHandle( std::make_shared< IXWindowHandle >( drawable, display ) );
+			return castor3d::WindowHandle( std::make_shared< castor3d::IXWindowHandle >( drawable, display ) );
 
 #endif
 		}

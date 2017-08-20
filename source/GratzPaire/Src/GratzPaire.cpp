@@ -9,31 +9,38 @@
 #include <wx/cmdline.h>
 #include <wx/display.h>
 
+#if defined( __WXGTK__ )
+#	include <X11/Xlib.h>
+#endif
+
 wxIMPLEMENT_APP( gratz_paire::main::GratzPaire );
 
 using namespace castor;
 using namespace castor3d;
 
-#if defined( NDEBUG )
-
-static const LogType ELogType_DEFAULT = LogType::eInfo;
-
-#else
-
-static const LogType ELogType_DEFAULT = LogType::eDebug;
-
-#endif
-
 namespace gratz_paire
 {
 	namespace main
 	{
+#if defined( NDEBUG )
+
+		static LogType constexpr DefaultLogType = LogType::eInfo;
+
+#else
+
+		static LogType constexpr DefaultLogType = LogType::eDebug;
+
+#endif
+
 		static wxString const ShortName = wxT( "GratzPaire" );
 		static wxString const LongName = wxT( "Gratz-Paire" );
 
 		GratzPaire::GratzPaire()
 			: wxApp{}
 		{
+#if defined( __WXGTK__ )
+		XInitThreads();
+#endif
 		}
 
 		bool GratzPaire::OnInit()
@@ -45,8 +52,8 @@ namespace gratz_paire
 #endif
 
 			bool result = doParseCommandLine();
-			wxDisplay l_display;
-			wxRect l_rect = l_display.GetClientArea();
+			wxDisplay display;
+			wxRect rect = display.GetClientArea();
 			wxWindow * window = nullptr;
 
 			if ( result )
@@ -97,52 +104,52 @@ namespace gratz_paire
 
 		bool GratzPaire::doParseCommandLine()
 		{
-			wxCmdLineParser l_parser( wxApp::argc, wxApp::argv );
-			l_parser.AddSwitch( wxT( "h" ), wxT( "help" ), _( "Displays this help" ) );
-			l_parser.AddOption( wxT( "l" ), wxT( "log" ), _( "Defines log level" ), wxCMD_LINE_VAL_NUMBER );
-			l_parser.AddParam( _( "The initial scene file" ), wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL );
-			l_parser.AddSwitch( wxT( "opengl" ), wxEmptyString, _( "Defines the renderer to OpenGl" ) );
-			l_parser.AddSwitch( wxT( "test" ), wxEmptyString, _( "Defines the renderer to Test" ) );
-			bool result = l_parser.Parse( false ) == 0;
+			wxCmdLineParser parser( wxApp::argc, wxApp::argv );
+			parser.AddSwitch( wxT( "h" ), wxT( "help" ), _( "Displays this help" ) );
+			parser.AddOption( wxT( "l" ), wxT( "log" ), _( "Defines log level" ), wxCMD_LINE_VAL_NUMBER );
+			parser.AddParam( _( "The initial scene file" ), wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL );
+			parser.AddSwitch( wxT( "opengl" ), wxEmptyString, _( "Defines the renderer to OpenGl" ) );
+			parser.AddSwitch( wxT( "test" ), wxEmptyString, _( "Defines the renderer to Test" ) );
+			bool result = parser.Parse( false ) == 0;
 
 			// S'il y avait des erreurs ou "-h" ou "--help", on affiche l'aide et on sort
-			if ( !result || l_parser.Found( wxT( 'h' ) ) )
+			if ( !result || parser.Found( wxT( 'h' ) ) )
 			{
-				l_parser.Usage();
+				parser.Usage();
 				result = false;
 			}
 
 			if ( result )
 			{
-				LogType l_eLogLevel = LogType::eCount;
-				long l_log;
+				LogType logLevel = LogType::eCount;
+				long log;
 
-				if ( !l_parser.Found( wxT( "l" ), &l_log ) )
+				if ( !parser.Found( wxT( "l" ), &log ) )
 				{
-					l_eLogLevel = ELogType_DEFAULT;
+					logLevel = DefaultLogType;
 				}
 				else
 				{
-					l_eLogLevel = LogType( l_log );
+					logLevel = LogType( log );
 				}
 
-				Logger::initialise( l_eLogLevel );
+				Logger::initialise( logLevel );
 
-				if ( l_parser.Found( wxT( "opengl" ) ) )
+				if ( parser.Found( wxT( "opengl" ) ) )
 				{
 					m_rendererType = cuT( "opengl" );
 				}
 
-				if ( l_parser.Found( wxT( "test" ) ) )
+				if ( parser.Found( wxT( "test" ) ) )
 				{
 					m_rendererType = cuT( "test" );
 				}
 
 				wxString l_strFileName;
 
-				if ( l_parser.GetParamCount() > 0 )
+				if ( parser.GetParamCount() > 0 )
 				{
-					m_fileName = l_parser.GetParam( 0 ).ToStdString();
+					m_fileName = parser.GetParam( 0 ).ToStdString();
 				}
 			}
 
@@ -151,30 +158,30 @@ namespace gratz_paire
 
 		bool GratzPaire::doInitialiseLocale()
 		{
-			long l_lLanguage = wxLANGUAGE_DEFAULT;
-			Path l_pathCurrent = File::getExecutableDirectory().getPath();
+			long language = wxLANGUAGE_DEFAULT;
+			Path pathCurrent = File::getExecutableDirectory().getPath();
 
 			// load language if possible, fall back to english otherwise
-			if ( wxLocale::IsAvailable( l_lLanguage ) )
+			if ( wxLocale::IsAvailable( language ) )
 			{
-				m_locale = std::make_unique< wxLocale >( l_lLanguage, wxLOCALE_LOAD_DEFAULT );
+				m_locale = std::make_unique< wxLocale >( language, wxLOCALE_LOAD_DEFAULT );
 				// add locale search paths
-				m_locale->AddCatalogLookupPathPrefix( l_pathCurrent / cuT( "share" ) / ShortName.ToStdString() );
+				m_locale->AddCatalogLookupPathPrefix( pathCurrent / cuT( "share" ) / ShortName.ToStdString() );
 				m_locale->AddCatalog( ShortName );
 
 				if ( !m_locale->IsOk() )
 				{
 					std::cerr << "Selected language is wrong" << std::endl;
-					l_lLanguage = wxLANGUAGE_ENGLISH;
-					m_locale = std::make_unique< wxLocale >( l_lLanguage );
+					language = wxLANGUAGE_ENGLISH;
+					m_locale = std::make_unique< wxLocale >( language );
 				}
 			}
 			else
 			{
 				std::cerr << "The selected language is not supported by your system."
 					<< "Try installing support for this language." << std::endl;
-				l_lLanguage = wxLANGUAGE_ENGLISH;
-				m_locale = std::make_unique< wxLocale >( l_lLanguage );
+				language = wxLANGUAGE_ENGLISH;
+				m_locale = std::make_unique< wxLocale >( language );
 			}
 
 			return true;
@@ -195,15 +202,15 @@ namespace gratz_paire
 			m_castor = std::make_unique< Engine >();
 			doloadPlugins();
 
-			auto l_renderers = m_castor->getPluginCache().getPlugins( PluginType::eRenderer );
+			auto renderers = m_castor->getPluginCache().getPlugins( PluginType::eRenderer );
 
-			if ( l_renderers.empty() )
+			if ( renderers.empty() )
 			{
 				CASTOR_EXCEPTION( "No renderer plug-ins" );
 			}
-			else if ( l_renderers.size() == 1 )
+			else if ( renderers.size() == 1 )
 			{
-				m_rendererType = std::static_pointer_cast< RendererPlugin >( l_renderers.begin()->second )->getRendererType();
+				m_rendererType = std::static_pointer_cast< RendererPlugin >( renderers.begin()->second )->getRendererType();
 			}
 
 			result = true;
@@ -218,69 +225,69 @@ namespace gratz_paire
 
 		void GratzPaire::doloadPlugins()
 		{
-			PathArray l_arrayFiles;
-			File::listDirectoryFiles( Engine::getPluginsDirectory(), l_arrayFiles );
-			PathArray l_arrayKept;
+			PathArray arrayFiles;
+			File::listDirectoryFiles( Engine::getPluginsDirectory(), arrayFiles );
+			PathArray arrayKept;
 
 			// Exclude debug plug-in in release builds, and release plug-ins in debug builds
-			for ( auto l_file : l_arrayFiles )
+			for ( auto file : arrayFiles )
 			{
 #if defined( NDEBUG )
 
-				if ( l_file.find( String( cuT( "d." ) ) + CASTOR_DLL_EXT ) == String::npos )
+				if ( file.find( String( cuT( "d." ) ) + CASTOR_DLL_EXT ) == String::npos )
 #else
 
-				if ( l_file.find( String( cuT( "d." ) ) + CASTOR_DLL_EXT ) != String::npos )
+				if ( file.find( String( cuT( "d." ) ) + CASTOR_DLL_EXT ) != String::npos )
 
 #endif
 				{
-					l_arrayKept.push_back( l_file );
+					arrayKept.push_back( file );
 				}
 			}
 
-			if ( !l_arrayKept.empty() )
+			if ( !arrayKept.empty() )
 			{
-				PathArray l_arrayFailed;
-				PathArray l_otherPlugins;
+				PathArray arrayFailed;
+				PathArray otherPlugins;
 
-				for ( auto l_file : l_arrayKept )
+				for ( auto file : arrayKept )
 				{
-					if ( l_file.getExtension() == CASTOR_DLL_EXT )
+					if ( file.getExtension() == CASTOR_DLL_EXT )
 					{
 						// Since techniques depend on renderers, we load these first
-						if ( l_file.find( cuT( "RenderSystem" ) ) != String::npos )
+						if ( file.find( cuT( "RenderSystem" ) ) != String::npos )
 						{
-							if ( !m_castor->getPluginCache().loadPlugin( l_file ) )
+							if ( !m_castor->getPluginCache().loadPlugin( file ) )
 							{
-								l_arrayFailed.push_back( l_file );
+								arrayFailed.push_back( file );
 							}
 						}
 						else
 						{
-							l_otherPlugins.push_back( l_file );
+							otherPlugins.push_back( file );
 						}
 					}
 				}
 
 				// Then we load other plug-ins
-				for ( auto l_file : l_otherPlugins )
+				for ( auto file : otherPlugins )
 				{
-					if ( !m_castor->getPluginCache().loadPlugin( l_file ) )
+					if ( !m_castor->getPluginCache().loadPlugin( file ) )
 					{
-						l_arrayFailed.push_back( l_file );
+						arrayFailed.push_back( file );
 					}
 				}
 
-				if ( !l_arrayFailed.empty() )
+				if ( !arrayFailed.empty() )
 				{
 					Logger::logWarning( cuT( "Some plug-ins couldn't be loaded :" ) );
 
-					for ( auto l_file : l_arrayFailed )
+					for ( auto file : arrayFailed )
 					{
-						Logger::logWarning( Path( l_file ).getFileName() );
+						Logger::logWarning( Path( file ).getFileName() );
 					}
 
-					l_arrayFailed.clear();
+					arrayFailed.clear();
 				}
 			}
 

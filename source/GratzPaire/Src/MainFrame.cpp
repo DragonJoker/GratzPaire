@@ -21,13 +21,7 @@ namespace gratz_paire
 	{
 		namespace
 		{
-			static const wxSize MainFrameSize{ 1024, 768 };
-			static const bool CASTOR3D_THREADED = true;
-
-			typedef enum eID
-			{
-				eID_RENDER_TIMER,
-			}	eID;
+			static wxSize const MainFrameSize{ 1024, 768 };
 
 			void doUpdate( Game & game )
 			{
@@ -50,7 +44,7 @@ namespace gratz_paire
 
 			try
 			{
-				wxGetApp().getCastor().initialise( 120, CASTOR3D_THREADED );
+				wxGetApp().getCastor().initialise( 120, true );
 				doLoadScene();
 				wxBoxSizer * sizer{ new wxBoxSizer{ wxHORIZONTAL } };
 				sizer->Add( m_panel.get(), wxSizerFlags( 1 ).Shaped().Centre() );
@@ -71,10 +65,7 @@ namespace gratz_paire
 		{
 			auto & engine = wxGetApp().getCastor();
 			auto window = doLoadScene( engine
-				, File::getExecutableDirectory().getPath() / cuT( "share" ) / cuT( "GratzPaire" ) / cuT( "Data.zip" )
-				//, Path{ cuT( "Z:\\Projets\\C++\\GratzPaires\\source\\GratzPaire\\Data\\Data" ) } / cuT( "main.cscn" )
-				, engine.getRenderLoop().getWantedFps()
-				, engine.isThreaded() );
+				, File::getExecutableDirectory().getPath() / cuT( "share" ) / cuT( "GratzPaire" ) / cuT( "Data.zip" ) );
 
 			if ( window )
 			{
@@ -114,42 +105,32 @@ namespace gratz_paire
 
 #endif
 
-				if ( CASTOR3D_THREADED )
+				engine.getRenderLoop().beginRendering();
+				engine.postEvent( MakeFunctorEvent( EventType::ePostRender, [this]()
 				{
-					engine.getRenderLoop().beginRendering();
-					engine.postEvent( MakeFunctorEvent( EventType::ePostRender, [this]()
-					{
-						doUpdate( *m_game );
-					} ) );
-				}
-				else
-				{
-					m_timer = new wxTimer( this, eID_RENDER_TIMER );
-					m_timer->Start( 1000 / engine.getRenderLoop().getWantedFps(), true );
-				}
+					doUpdate( *m_game );
+				} ) );
 			}
 		}
 
-		RenderWindowSPtr MainFrame::doLoadScene( Engine & p_engine
-			, castor::Path const & p_fileName
-			, uint32_t p_wantedFps
-			, bool p_threaded )
+		RenderWindowSPtr MainFrame::doLoadScene( Engine & engine
+			, castor::Path const & fileName )
 		{
 			RenderWindowSPtr result;
 
-			if ( File::fileExists( p_fileName ) )
+			if ( File::fileExists( fileName ) )
 			{
-				Logger::logInfo( cuT( "Loading scene file : " ) + p_fileName );
+				Logger::logInfo( cuT( "Loading scene file : " ) + fileName );
 
-				if ( p_fileName.getExtension() == cuT( "cscn" ) || p_fileName.getExtension() == cuT( "zip" ) )
+				if ( fileName.getExtension() == cuT( "cscn" ) || fileName.getExtension() == cuT( "zip" ) )
 				{
 					try
 					{
-						SceneFileParser l_parser( p_engine );
+						SceneFileParser parser( engine );
 
-						if ( l_parser.parseFile( p_fileName ) )
+						if ( parser.parseFile( fileName ) )
 						{
-							result = l_parser.getRenderWindow();
+							result = parser.getRenderWindow();
 						}
 						else
 						{
@@ -164,7 +145,7 @@ namespace gratz_paire
 			}
 			else
 			{
-				wxMessageBox( _( "Scene file doesn't exist :" ) + wxString( wxT( "\n" ) ) + p_fileName );
+				wxMessageBox( _( "Scene file doesn't exist :" ) + wxString( wxT( "\n" ) ) + fileName );
 			}
 
 			return result;
@@ -174,7 +155,6 @@ namespace gratz_paire
 			EVT_PAINT( MainFrame::onPaint )
 			EVT_CLOSE( MainFrame::onClose )
 			EVT_ERASE_BACKGROUND( MainFrame::onEraseBackground )
-			EVT_TIMER( eID_RENDER_TIMER, MainFrame::onRenderTimer )
 		END_EVENT_TABLE()
 
 		void MainFrame::onPaint( wxPaintEvent & p_event )
@@ -225,21 +205,6 @@ namespace gratz_paire
 		void MainFrame::onEraseBackground( wxEraseEvent & p_event )
 		{
 			p_event.Skip();
-		}
-
-		void MainFrame::onRenderTimer( wxTimerEvent & p_event )
-		{
-			auto & l_castor = wxGetApp().getCastor();
-
-			if ( !l_castor.isCleaned() )
-			{
-				if ( !l_castor.isThreaded() )
-				{
-					l_castor.getRenderLoop().renderSyncFrame();
-					m_game->update();
-					m_timer->Start( 1000 / l_castor.getRenderLoop().getWantedFps(), true );
-				}
-			}
 		}
 	}
 }

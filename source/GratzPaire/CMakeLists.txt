@@ -10,6 +10,7 @@ set( ${PROJECT_NAME}_VERSION_BUILD 0 )
 
 if( NOT WIN32 )
 	find_package( GTK2 )
+	set( X11Libraries X11 )
 else()
 	set( GTK2_FOUND TRUE )
 endif()
@@ -17,7 +18,7 @@ endif()
 find_package( wxWidgets COMPONENTS core base aui adv )
 
 if( wxWidgets_FOUND AND GTK2_FOUND )
-	include_directories( ${CMAKE_SOURCE_DIR}/GameEngine/Src )
+	include_directories( ${GTK2_INCLUDE_DIRS} )
 	include_directories( ${wxWidgets_INCLUDE_DIRS} )
 	string( COMPARE EQUAL "${wxWidgets_USE_DEBUG}" "ON" IsWxDebug )
 	set( wxWidgets_CXXFLAGS "${wxWidgets_CXX_FLAGS} -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES" )
@@ -48,8 +49,8 @@ if( wxWidgets_FOUND AND GTK2_FOUND )
 	add_target(
 		${PROJECT_NAME}
 		bin
-		"GameEngine"
-		"${PairesMinLibraries};${wxWidgetsLibraries}"
+		""
+		"${PairesMinLibraries};${wxWidgetsLibraries};${X11Libraries}"
 		"GratzPairePch.hpp"
 		"GratzPairePch.cpp"
 		"${wxWidgets_CFLAGS}"
@@ -67,11 +68,10 @@ if( wxWidgets_FOUND AND GTK2_FOUND )
 	if ( WIN32 )
 		include( InstallRequiredSystemLibraries )
 		get_filename_component( FmodLibPath ${Fmod_LIBRARY} PATH )
-		get_filename_component( FmodLibPath ${FmodLibPath} PATH )
 		if ( ${PROJECTS_PLATFORM} STREQUAL "x86" )
-			set( FmodLibPath ${FmodLibPath}/fmodex.dll )
+			set( FmodLibPath ${FmodLibPath}/fmod.dll )
 		else ()
-			set( FmodLibPath ${FmodLibPath}/fmodex64.dll )
+			set( FmodLibPath ${FmodLibPath}/fmod64.dll )
 		endif ()
 		copy_dll( ${PROJECT_NAME} ${FmodLibPath} ${FmodLibPath} )
 	endif ()

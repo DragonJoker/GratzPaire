@@ -9,6 +9,7 @@ using namespace castor3d;
 
 namespace gratz_paire
 {
+#if defined( CASTOR_PLATFORM_WINDOWS )
 	namespace
 	{
 		bool checkError( FMOD_RESULT result )
@@ -17,64 +18,60 @@ namespace gratz_paire
 			return result == FMOD_OK;
 		}
 	}
+#endif
 
 	Audio::Audio()
 	{
+#if defined( CASTOR_PLATFORM_WINDOWS )
 		auto result = FMOD::System_Create( &m_system );
 
 		if ( checkError( result ) )
 		{
-			result = m_system->init( 32, FMOD_INIT_NORMAL, nullptr );
+			result = m_system->init( 3u, FMOD_INIT_NORMAL, nullptr );
 
 			if ( checkError( result ) )
 			{
-				Path basePath = Engine::getEngineDirectory() / cuT( "Data" ) / cuT( "Sounds" );
 				result = m_system->getChannel( 0u, &m_sfxChannel );
-				checkError( result );
-				result = m_system->createSound( string::stringCast< char >( basePath / cuT( "Card.mp3" ) ).c_str()
-					, FMOD_CREATESAMPLE
-					, nullptr
-					, &m_cardSwipe );
 				checkError( result );
 				result = m_system->getChannel( 1u, &m_ambientChannel );
 				checkError( result );
-				result = m_system->createSound( string::stringCast< char >( basePath / cuT( "Ambient.mp3" ) ).c_str()
-					, FMOD_SOFTWARE | FMOD_2D | FMOD_CREATESTREAM | FMOD_LOOP_NORMAL
-					, nullptr
-					, &m_ambient );
-				checkError( result );
-				m_ambient->setLoopCount( -1 );
-				result = m_system->playSound( FMOD_CHANNEL_FREE, m_ambient, false, &m_ambientChannel );
 				m_ambientChannel->setVolume( 0.3f );
+				checkError( result );
 			}
 		}
+#endif
 	}
 
 	Audio::~Audio()
 	{
-		if ( m_ambient )
-		{
-			m_ambient->release();
-		}
+		m_sounds.clear();
+		m_soundsById.clear();
 
-		if ( m_cardSwipe )
-		{
-			m_cardSwipe->release();
-		}
-
+#if defined( CASTOR_PLATFORM_WINDOWS )
 		if ( m_system )
 		{
 			m_system->close();
 			m_system->release();
 		}
+#endif
 	}
 
-	void Audio::cardSwipe()
+	Sound & Audio::addSound( uint32_t id
+		, Sound::Type type
+		, castor::Path const & file
+		, bool looped )
 	{
-		if ( m_cardSwipe )
-		{
-			auto result = m_system->playSound( FMOD_CHANNEL_FREE, m_cardSwipe, false, nullptr );
-			checkError( result );
-		}
+		m_sounds.emplace_back( type, file, looped, *this );
+		auto & result = m_sounds.back();
+		m_soundsById.emplace( id, &result );
+		return result;
+	}
+	
+
+	void Audio::playSound( uint32_t id )
+	{
+		auto it = m_soundsById.find( id );
+		REQUIRE( it != m_soundsById.end() );
+		it->second->play();
 	}
 }

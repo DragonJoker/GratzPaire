@@ -29,6 +29,18 @@ namespace gratz_paire
 
 	// Game
 	class Game;
+	class Hud;
+	class Audio;
+
+	enum class SoundId
+	{
+		eMusic,
+		eButton,
+		eCard,
+		eError,
+		eWin,
+		eGameOver
+	};
 
 	// Helpers
 	template< typename T >

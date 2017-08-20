@@ -23,66 +23,16 @@ namespace gratz_paire
 {
 	namespace main
 	{
-		namespace
-		{
-			KeyboardKey convertKeyCode( int code )
-			{
-				KeyboardKey result = KeyboardKey::eNone;
-
-				if ( code < 0x20 )
-				{
-					switch ( code )
-					{
-					case WXK_BACK:
-					case WXK_TAB:
-					case WXK_RETURN:
-					case WXK_ESCAPE:
-						result = KeyboardKey( code );
-						break;
-					}
-				}
-				else if ( code == 0x7F )
-				{
-					result = KeyboardKey::eDelete;
-				}
-				else if ( code > 0xFF )
-				{
-					result = KeyboardKey( code + int( KeyboardKey::eStart ) - WXK_START );
-				}
-				else
-				{
-					// ASCII or extended ASCII character
-					result = KeyboardKey( code );
-				}
-
-				return result;
-			}
-
-			static real const g_camSpeed = 10.0_r;
-		}
-
 		RenderPanel::RenderPanel( wxWindow * parent
 			, wxSize const & size
 			, Game & game )
 			: wxPanel{ parent, wxID_ANY, wxDefaultPosition, size }
 			, m_game{ game }
-			, m_timers
-			{
-				new wxTimer( this, int( TimerID::eUp ) ),
-				new wxTimer( this, int( TimerID::eDown ) ),
-				new wxTimer( this, int( TimerID::eLeft ) ),
-				new wxTimer( this, int( TimerID::eRight ) ),
-				new wxTimer( this, int( TimerID::eMouse ) ),
-			}
 		{
 		}
 
 		RenderPanel::~RenderPanel()
 		{
-			for ( auto & timer : m_timers )
-			{
-				delete timer;
-			}
 		}
 
 		void RenderPanel::setRenderWindow( castor3d::RenderWindowSPtr window )
@@ -96,7 +46,8 @@ namespace gratz_paire
 				castor::System::getScreenSize( 0, l_sizeScreen );
 				GetParent()->SetClientSize( sizeWnd.getWidth(), sizeWnd.getHeight() );
 				sizeWnd = makeSize( GetParent()->GetClientSize() );
-				GetParent()->SetPosition( wxPoint( std::abs( int( l_sizeScreen.getWidth() ) - int( sizeWnd.getWidth() ) ) / 2, std::abs( int( l_sizeScreen.getHeight() ) - int( sizeWnd.getHeight() ) ) / 2 ) );
+				GetParent()->SetPosition( wxPoint( std::abs( int( l_sizeScreen.getWidth() ) - int( sizeWnd.getWidth() ) ) / 2
+					, std::abs( int( l_sizeScreen.getHeight() ) - int( sizeWnd.getHeight() ) ) / 2 ) );
 				SceneSPtr scene = window->getScene();
 
 				if ( scene )
@@ -109,7 +60,6 @@ namespace gratz_paire
 						auto l_lock = makeUniqueLock( scene->getCameraCache() );
 						auto l_camera = scene->getCameraCache().begin()->second;
 						window->getPickingPass().addScene( *scene, *l_camera );
-						m_timers[size_t( TimerID::eMouse )]->Start( 30 );
 					}
 				}
 			}
@@ -176,45 +126,16 @@ namespace gratz_paire
 			m_game.selectCard( newGeometry );
 		}
 
-		void RenderPanel::doStartTimer( TimerID id )
-		{
-			m_timers[size_t( id )]->Start( 10 );
-		}
-
-		void RenderPanel::doStopTimer( TimerID id )
-		{
-			if ( id != TimerID::eCount )
-			{
-				m_timers[size_t( id )]->Stop();
-			}
-			else
-			{
-				for ( size_t i = 0; i < size_t( TimerID::eMouse ); i++ )
-				{
-					m_timers[i]->Stop();
-				}
-			}
-		}
-
 		BEGIN_EVENT_TABLE( RenderPanel, wxPanel )
 			EVT_SIZE( RenderPanel::onSize )
 			EVT_MOVE( RenderPanel::onMove )
 			EVT_PAINT( RenderPanel::onPaint )
-			EVT_KEY_DOWN( RenderPanel::onKeyDown )
-			EVT_KEY_UP( RenderPanel::onKeyUp )
 			EVT_LEFT_DOWN( RenderPanel::onMouseLDown )
 			EVT_LEFT_UP( RenderPanel::onMouseLUp )
-			EVT_RIGHT_UP( RenderPanel::onMouseRUp )
 			EVT_MOTION( RenderPanel::onMouseMove )
-			EVT_MOUSEWHEEL( RenderPanel::onMouseWheel )
-			EVT_TIMER( int( TimerID::eUp ), RenderPanel::onTimerUp )
-			EVT_TIMER( int( TimerID::eDown ), RenderPanel::onTimerDown )
-			EVT_TIMER( int( TimerID::eLeft ), RenderPanel::onTimerLeft )
-			EVT_TIMER( int( TimerID::eRight ), RenderPanel::onTimerRight )
-			EVT_TIMER( int( TimerID::eMouse ), RenderPanel::onMouseTimer )
-			END_EVENT_TABLE()
+		END_EVENT_TABLE()
 
-			void RenderPanel::onSize( wxSizeEvent & p_event )
+		void RenderPanel::onSize( wxSizeEvent & p_event )
 		{
 			RenderWindowSPtr window = m_renderWindow.lock();
 
@@ -270,125 +191,6 @@ namespace gratz_paire
 
 		void RenderPanel::onKillFocus( wxFocusEvent & p_event )
 		{
-			doStopTimer( TimerID::eCount );
-			p_event.Skip();
-		}
-
-		void RenderPanel::onKeyDown( wxKeyEvent & p_event )
-		{
-			auto l_inputListener = wxGetApp().getCastor().getUserInputListener();
-
-			if ( !l_inputListener || !l_inputListener->fireKeydown( convertKeyCode( p_event.GetKeyCode() )
-				, p_event.ControlDown()
-				, p_event.AltDown()
-				, p_event.ShiftDown() ) )
-			{
-				switch ( p_event.GetKeyCode() )
-				{
-				case WXK_LEFT:
-				case 'Q':
-					doStartTimer( TimerID::eLeft );
-					break;
-
-				case WXK_RIGHT:
-				case 'D':
-					doStartTimer( TimerID::eRight );
-					break;
-
-				case WXK_UP:
-				case 'Z':
-					doStartTimer( TimerID::eUp );
-					break;
-
-				case WXK_DOWN:
-				case 'S':
-					doStartTimer( TimerID::eDown );
-					break;
-				}
-			}
-
-			p_event.Skip();
-		}
-
-		void RenderPanel::onKeyUp( wxKeyEvent & p_event )
-		{
-			auto l_inputListener = wxGetApp().getCastor().getUserInputListener();
-
-			if ( !l_inputListener || !l_inputListener->fireKeyUp( convertKeyCode( p_event.GetKeyCode() )
-				, p_event.ControlDown()
-				, p_event.AltDown()
-				, p_event.ShiftDown() ) )
-			{
-				switch ( p_event.GetKeyCode() )
-				{
-				case WXK_F1:
-					m_listener->postEvent( MakeFunctorEvent( EventType::ePostRender
-						, [this]()
-						{
-							if ( m_game.isRunning() )
-							{
-								m_game.help();
-							}
-						} ) );
-					break;
-
-				case WXK_RETURN:
-				case WXK_NUMPAD_ENTER:
-					m_listener->postEvent( MakeFunctorEvent( EventType::ePostRender
-						, [this]()
-						{
-							if ( m_game.isEnded() )
-							{
-								m_game.reset();
-								m_game.start();
-							}
-							else if ( !m_game.isStarted() )
-							{
-								m_game.start();
-							}
-						} ) );
-					break;
-
-				case WXK_SPACE:
-					m_listener->postEvent( MakeFunctorEvent( EventType::ePostRender
-						, [this]()
-						{
-							if ( m_game.isStarted() )
-							{
-								if ( m_game.isPaused() )
-								{
-									m_game.resume();
-								}
-								else
-								{
-									m_game.pause();
-								}
-							}
-						} ) );
-					break;
-
-				case WXK_LEFT:
-				case 'Q':
-					doStopTimer( TimerID::eLeft );
-					break;
-
-				case WXK_RIGHT:
-				case 'D':
-					doStopTimer( TimerID::eRight );
-					break;
-
-				case WXK_UP:
-				case 'Z':
-					doStopTimer( TimerID::eUp );
-					break;
-
-				case WXK_DOWN:
-				case 'S':
-					doStopTimer( TimerID::eDown );
-					break;
-				}
-			}
-
 			p_event.Skip();
 		}
 
@@ -451,40 +253,6 @@ namespace gratz_paire
 			p_event.Skip();
 		}
 
-		void RenderPanel::onMouseRDown( wxMouseEvent & p_event )
-		{
-			auto window = getRenderWindow();
-
-			if ( window )
-			{
-				auto l_inputListener = wxGetApp().getCastor().getUserInputListener();
-
-				if ( l_inputListener )
-				{
-					l_inputListener->fireMouseButtonPushed( MouseButton::eRight );
-				}
-			}
-
-			p_event.Skip();
-		}
-
-		void RenderPanel::onMouseRUp( wxMouseEvent & p_event )
-		{
-			auto window = getRenderWindow();
-
-			if ( window )
-			{
-				auto l_inputListener = wxGetApp().getCastor().getUserInputListener();
-
-				if ( l_inputListener )
-				{
-					l_inputListener->fireMouseButtonReleased( MouseButton::eRight );
-				}
-			}
-
-			p_event.Skip();
-		}
-
 		void RenderPanel::onMouseMove( wxMouseEvent & p_event )
 		{
 			m_x = doTransformX( p_event.GetX() );
@@ -503,36 +271,6 @@ namespace gratz_paire
 
 			m_oldX = m_x;
 			m_oldY = m_y;
-			p_event.Skip();
-		}
-
-		void RenderPanel::onMouseWheel( wxMouseEvent & p_event )
-		{
-			p_event.Skip();
-		}
-
-		void RenderPanel::onMouseTimer( wxTimerEvent & p_event )
-		{
-			p_event.Skip();
-		}
-
-		void RenderPanel::onTimerUp( wxTimerEvent & p_event )
-		{
-			p_event.Skip();
-		}
-
-		void RenderPanel::onTimerDown( wxTimerEvent & p_event )
-		{
-			p_event.Skip();
-		}
-
-		void RenderPanel::onTimerLeft( wxTimerEvent & p_event )
-		{
-			p_event.Skip();
-		}
-
-		void RenderPanel::onTimerRight( wxTimerEvent & p_event )
-		{
 			p_event.Skip();
 		}
 	}

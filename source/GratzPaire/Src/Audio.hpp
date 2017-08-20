@@ -5,9 +5,9 @@ See licence file in root folder, MIT.txt
 #ifndef ___EFO_Audio_HPP___
 #define ___EFO_Audio_HPP___
 
-#include "GratzPairePrerequisites.hpp"
+#include "Sound.hpp"
 
-#include <fmod.hpp>
+#include <list>
 
 namespace gratz_paire
 {
@@ -30,16 +30,52 @@ namespace gratz_paire
 		~Audio();
 		/**
 		*\brief
-		*	Plays the card swipe sound.
+		*	Creates a sound.
 		*/
-		void cardSwipe();
+		Sound & addSound( uint32_t id
+			, Sound::Type type
+			, castor::Path const & file
+			, bool looped );
+		/**
+		*\brief
+		*	Plays a sound, given its ID.
+		*/
+		void playSound( uint32_t id );
+#if defined( CASTOR_PLATFORM_WINDOWS )
+		/**
+		*\return
+		*	The FMOD system.
+		*/
+		FMOD::System * getSystem()const
+		{
+			return m_system;
+		}
+		/**
+		*\return
+		*	The SFX channel.
+		*/
+		FMOD::Channel * getSfxChannel()const
+		{
+			return m_sfxChannel;
+		}
+		/**
+		*\return
+		*	The music channel.
+		*/
+		FMOD::Channel * getMusicChannel()const
+		{
+			return m_ambientChannel;
+		}
 
 	private:
 		FMOD::System * m_system = nullptr;
-		FMOD::Sound * m_ambient = nullptr;
 		FMOD::Channel * m_ambientChannel = nullptr;
-		FMOD::Sound * m_cardSwipe = nullptr;
 		FMOD::Channel * m_sfxChannel = nullptr;
+#endif
+
+	private:
+		std::list< Sound > m_sounds;
+		std::map< uint32_t, Sound * > m_soundsById;
 	};
 }
 

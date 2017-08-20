@@ -29,54 +29,22 @@ namespace gratz_paire
 		uint32_t doGetIndex( String name )
 		{
 			name = name.substr( name.find_first_of( '_' ) + 1 );
-			std::cout << name << std::endl;
 			name = name.substr( 0, name.find_first_of( '_' ) );
-			std::cout << name << std::endl;
 			return uint32_t( string::toInt( name ) );
 		}
 	}
 
 	Game::Game( castor3d::Scene & scene )
 		: m_scene{ scene }
-		, m_hud{ *this, scene }
 		, m_audio{}
+		, m_hud{ *this, m_audio, scene }
 	{
 		m_hud.initialise();
 		m_state = State::eInitial;
-
-		{
-			auto & nodes = m_scene.getSceneNodeCache();
-			auto lock = makeUniqueLock( nodes );
-			m_nodes.push_back( nodes.find( cuT( "Carte_1" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_2" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_3" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_4" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_5" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_6" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_7" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_8" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_9" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_10" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_11" ) ) );
-			m_nodes.push_back( nodes.find( cuT( "Carte_12" ) ) );
-		}
-
-		{
-			auto & geometries = m_scene.getGeometryCache();
-			auto lock = makeUniqueLock( geometries );
-			m_cards.emplace( geometries.find( cuT( "Carte_1_Verso" ) ), geometries.find( cuT( "Carte_1_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_2_Verso" ) ), geometries.find( cuT( "Carte_2_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_3_Verso" ) ), geometries.find( cuT( "Carte_3_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_4_Verso" ) ), geometries.find( cuT( "Carte_4_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_5_Verso" ) ), geometries.find( cuT( "Carte_5_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_6_Verso" ) ), geometries.find( cuT( "Carte_6_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_7_Verso" ) ), geometries.find( cuT( "Carte_7_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_8_Verso" ) ), geometries.find( cuT( "Carte_8_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_9_Verso" ) ), geometries.find( cuT( "Carte_9_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_10_Verso" ) ), geometries.find( cuT( "Carte_10_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_11_Verso" ) ), geometries.find( cuT( "Carte_11_Recto" ) ) );
-			m_cards.emplace( geometries.find( cuT( "Carte_12_Verso" ) ), geometries.find( cuT( "Carte_12_Recto" ) ) );
-		}
+		doCreateSounds();
+		doLoadNodes();
+		doLoadCards();
+		m_audio.playSound( uint32_t( SoundId::eMusic ) );
 	}
 
 	void Game::reset()
@@ -131,37 +99,11 @@ namespace gratz_paire
 			{
 				if ( doIsPair() )
 				{
-					m_selected.clear();
-					m_revealed.clear();
-					m_ok += 2u;
-
-					if ( m_ok == m_cards.size() )
-					{
-						m_state = State::eEnded;
-						m_hud.win();
-					}
+					doSuccess();
 				}
 				else
 				{
-					auto it = m_revealed.begin();
-					if ( it->second.isRevealed()
-						&& ( ++it )->second.isRevealed() )
-					{
-						m_audio.cardSwipe();
-						m_audio.cardSwipe();
-						++m_errors;
-						m_hud.update( m_errors );
-					}
-
-					if ( m_errors >= MaxErrors )
-					{
-						m_state = State::eEnded;
-						m_hud.gameOver();
-					}
-					else
-					{
-						doHideCards();
-					}
+					doError();
 				}
 			}
 
@@ -182,7 +124,7 @@ namespace gratz_paire
 				&& m_revealed.size() < 2u )
 			{
 				m_selected.emplace( geometry, Card{ geometry } );
-				m_audio.cardSwipe();
+				m_audio.playSound( uint32_t( SoundId::eCard ) );
 			}
 		}
 	}
@@ -190,6 +132,71 @@ namespace gratz_paire
 	Point3r Game::convert( castor::Point2i const & position )const
 	{
 		return Point3r{};
+	}
+
+	void Game::doCreateSounds()
+	{
+		Path basePath = Engine::getEngineDirectory() / cuT( "Data" ) / cuT( "Sounds" );
+		m_audio.addSound( uint32_t( SoundId::eMusic )
+			, Sound::Type::eMusic
+			, basePath / cuT( "Ambient.mp3" )
+			, true );
+		m_audio.addSound( uint32_t( SoundId::eCard )
+			, Sound::Type::eSfx
+			, basePath / cuT( "Card.mp3" )
+			, false );
+		m_audio.addSound( uint32_t( SoundId::eButton )
+			, Sound::Type::eSfx
+			, basePath / cuT( "Button.wav" )
+			, false );
+		m_audio.addSound( uint32_t( SoundId::eError )
+			, Sound::Type::eSfx
+			, basePath / cuT( "Error.wav" )
+			, false );
+		m_audio.addSound( uint32_t( SoundId::eGameOver )
+			, Sound::Type::eSfx
+			, basePath / cuT( "GameOver.mp3" )
+			, false );
+		m_audio.addSound( uint32_t( SoundId::eWin )
+			, Sound::Type::eSfx
+			, basePath / cuT( "Win.mp3" )
+			, false );
+	}
+
+	void Game::doLoadNodes()
+	{
+		auto & nodes = m_scene.getSceneNodeCache();
+		auto lock = makeUniqueLock( nodes );
+		m_nodes.push_back( nodes.find( cuT( "Carte_1" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_2" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_3" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_4" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_5" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_6" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_7" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_8" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_9" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_10" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_11" ) ) );
+		m_nodes.push_back( nodes.find( cuT( "Carte_12" ) ) );
+	}
+
+	void Game::doLoadCards()
+	{
+		auto & geometries = m_scene.getGeometryCache();
+		auto lock = makeUniqueLock( geometries );
+		m_cards.emplace( geometries.find( cuT( "Carte_1_Verso" ) ), geometries.find( cuT( "Carte_1_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_2_Verso" ) ), geometries.find( cuT( "Carte_2_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_3_Verso" ) ), geometries.find( cuT( "Carte_3_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_4_Verso" ) ), geometries.find( cuT( "Carte_4_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_5_Verso" ) ), geometries.find( cuT( "Carte_5_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_6_Verso" ) ), geometries.find( cuT( "Carte_6_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_7_Verso" ) ), geometries.find( cuT( "Carte_7_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_8_Verso" ) ), geometries.find( cuT( "Carte_8_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_9_Verso" ) ), geometries.find( cuT( "Carte_9_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_10_Verso" ) ), geometries.find( cuT( "Carte_10_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_11_Verso" ) ), geometries.find( cuT( "Carte_11_Recto" ) ) );
+		m_cards.emplace( geometries.find( cuT( "Carte_12_Verso" ) ), geometries.find( cuT( "Carte_12_Recto" ) ) );
 	}
 
 	void Game::doPrepareCards()
@@ -247,11 +254,51 @@ namespace gratz_paire
 
 	bool Game::doIsPair()
 	{
+		REQUIRE( m_revealed.size() == 2u );
 		auto it = m_revealed.begin();
 		auto index1 = doGetIndex( it->first->getName() );
 		++it;
 		auto index2 = doGetIndex( it->first->getName() );
 
 		return ( std::max( index2, index1 ) - std::min( index2, index1 ) == m_cards.size() / 2u );
+	}
+
+	void Game::doSuccess()
+	{
+		m_selected.clear();
+		m_revealed.clear();
+		m_ok += 2u;
+
+		if ( m_ok == m_cards.size() )
+		{
+			m_state = State::eEnded;
+			m_hud.win();
+			m_audio.playSound( uint32_t( SoundId::eWin ) );
+		}
+	}
+
+	void Game::doError()
+	{
+		auto it = m_revealed.begin();
+		if ( it->second.isRevealed()
+			&& ( ++it )->second.isRevealed() )
+		{
+			m_audio.playSound( uint32_t( SoundId::eCard ) );
+			m_audio.playSound( uint32_t( SoundId::eCard ) );
+			++m_errors;
+			m_hud.update( m_errors );
+			m_audio.playSound( uint32_t( SoundId::eError ) );
+		}
+
+		if ( m_errors >= MaxErrors )
+		{
+			m_state = State::eEnded;
+			m_hud.gameOver();
+			m_audio.playSound( uint32_t( SoundId::eGameOver ) );
+		}
+		else
+		{
+			doHideCards();
+		}
 	}
 }

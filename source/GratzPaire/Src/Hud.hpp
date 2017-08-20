@@ -23,6 +23,7 @@ namespace gratz_paire
 		*	The game instance.
 		*/
 		Hud( Game & game
+			, Audio & audio
 			, castor3d::Scene const & scene );
 		/**
 		*\brief
@@ -72,6 +73,7 @@ namespace gratz_paire
 
 	private:
 		Game & m_game;
+		Audio & m_audio;
 		castor3d::Scene const & m_scene;
 	};
 }

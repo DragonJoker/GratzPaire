@@ -123,8 +123,13 @@ macro( parse_subdir_files _FOLDER _GROUP )
 	source_group( "Source Files\\${_GROUP}" FILES ${_FOLDER_SOURCE_FILES} )
 endmacro()
 
-find_package( Castor3D COMPONENTS CastorUtils CastorTest Castor3D GlslWriter )
-find_package( FMOD )
+find_package( Castor3D COMPONENTS CastorUtils Castor3D GlslWriter )
+
+if ( WIN32 )
+	find_package( Fmod )
+else ()
+	set( FMOD_FOUND ON )
+endif ()
 
 if ( Castor3D_FOUND AND FMOD_FOUND )
 	include_directories( ${Castor3D_INCLUDE_DIRS} )

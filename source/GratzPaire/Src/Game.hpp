@@ -114,10 +114,15 @@ namespace gratz_paire
 		}
 
 	private:
+		void doCreateSounds();
+		void doLoadNodes();
+		void doLoadCards();
 		void doPrepareCards();
 		void doRevealCards();
 		void doHideCards();
 		bool doIsPair();
+		void doSuccess();
+		void doError();
 
 	private:
 		// Persistent data.
@@ -125,8 +130,8 @@ namespace gratz_paire
 		std::vector< castor3d::SceneNodeSPtr > m_nodes;
 		// key => verso, value => recto.
 		std::map< castor3d::GeometrySPtr, castor3d::GeometrySPtr > m_cards;
-		Hud m_hud;
 		Audio m_audio;
+		Hud m_hud;
 		// Varying data.
 		Clock::time_point m_saved;
 		castor::Milliseconds m_elapsed;

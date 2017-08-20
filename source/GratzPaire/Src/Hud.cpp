@@ -1,5 +1,6 @@
 ﻿#include "Hud.hpp"
 
+#include "Audio.hpp"
 #include "Game.hpp"
 
 #include <Cache/OverlayCache.hpp>
@@ -15,8 +16,10 @@ using namespace castor3d;
 namespace gratz_paire
 {
 	Hud::Hud( Game & game
+		, Audio & audio
 		, Scene const & scene )
 		: m_game{ game }
+		, m_audio{ audio }
 		, m_scene{ scene }
 	{
 	}
@@ -27,21 +30,25 @@ namespace gratz_paire
 		userListener->registerClickAction( cuT( "Menu/Regles" )
 			, [this]()
 			{
+				m_audio.playSound( uint32_t( SoundId::eButton ) );
 				help();
 			} );
 		userListener->registerClickAction( cuT( "MenuInGame" )
 			, [this]()
 			{
+				m_audio.playSound( uint32_t( SoundId::eButton ) );
 				m_game.pause();
 			} );
 		userListener->registerClickAction( cuT( "Menu/Jouer" )
 			, [this]()
 			{
+				m_audio.playSound( uint32_t( SoundId::eButton ) );
 				m_game.start();
 			} );
 		userListener->registerClickAction( cuT( "Menu/Recommencer" )
 			, [this]()
 			{
+				m_audio.playSound( uint32_t( SoundId::eButton ) );
 				m_game.reset();
 				m_game.start();
 				update( 0u );
@@ -49,11 +56,14 @@ namespace gratz_paire
 		userListener->registerClickAction( cuT( "Menu/Continuer" )
 			, [this]()
 			{
+				m_audio.playSound( uint32_t( SoundId::eButton ) );
 				m_game.resume();
 			} );
 		userListener->registerClickAction( cuT( "Regles/Retour" )
 			, [this]()
 			{
+				m_audio.playSound( uint32_t( SoundId::eButton ) );
+
 				if ( m_game.isPaused() )
 				{
 					pause();
