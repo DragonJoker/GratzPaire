@@ -47,7 +47,9 @@ namespace gratz_paire
 
 	void Audio::update()
 	{
+#if defined( CASTOR_PLATFORM_WINDOWS )
 		m_system->update();
+#endif		
 	}
 
 	Sound & Audio::addSound( uint32_t id

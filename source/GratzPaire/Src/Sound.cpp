@@ -1,17 +1,18 @@
 ﻿#include "Sound.hpp"
 #include "Audio.hpp"
 
+#if defined( CASTOR_PLATFORM_WINDOWS )
 #include <fmod_errors.h>
+#endif
 
 using namespace castor;
 using namespace castor3d;
 
 namespace gratz_paire
 {
+#if defined( CASTOR_PLATFORM_WINDOWS )
 	bool checkError( FMOD_RESULT result )
 	{
-		REQUIRE( result == FMOD_OK );
-
 		if ( result != FMOD_OK )
 		{
 			std::cerr << FMOD_ErrorString( result ) << std::endl;
@@ -19,13 +20,16 @@ namespace gratz_paire
 
 		return result == FMOD_OK;
 	}
+#endif
 
 	Sound::Sound( Type type
 		, Path const & file
 		, bool looped
 		, Audio const & audio )
+#if defined( CASTOR_PLATFORM_WINDOWS )
 		: m_system{ audio.getSystem() }
 		, m_channel{ type == Type::eSfx ? audio.getSfxChannel() : audio.getMusicChannel() }
+#endif
 	{
 #if defined( CASTOR_PLATFORM_WINDOWS )
 		auto loop = ( looped ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF );
@@ -82,6 +86,7 @@ namespace gratz_paire
 #endif
 	}
 
+#if defined( CASTOR_PLATFORM_WINDOWS )
 	FMOD_RESULT Sound::callback( FMOD_CHANNELCONTROL * channelControl
 		, FMOD_CHANNELCONTROL_TYPE controlType
 		, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType
@@ -103,4 +108,5 @@ namespace gratz_paire
 
 		return FMOD_OK;
 	}
+#endif  
 }

@@ -51,13 +51,20 @@ namespace gratz_paire
 				m_audio.playSound( uint32_t( SoundId::eButton ) );
 				m_game.reset();
 				m_game.start();
-				update( 0u );
 			} );
 		userListener->registerClickAction( cuT( "Menu/Continuer" )
 			, [this]()
 			{
 				m_audio.playSound( uint32_t( SoundId::eButton ) );
-				m_game.resume();
+
+				if ( m_game.isPaused() )
+				{
+					m_game.resume();
+				}
+				else
+				{
+					m_game.start();
+				}
 			} );
 		userListener->registerClickAction( cuT( "Regles/Retour" )
 			, [this]()
@@ -85,7 +92,7 @@ namespace gratz_paire
 				cache.find( cuT( "Title" ) )->setVisible( true );
 				cache.find( cuT( "Menu" ) )->setVisible( true );
 				cache.find( cuT( "MenuInGame" ) )->setVisible( false );
-				cache.find( cuT( "Errors" ) )->setVisible( false );
+				cache.find( cuT( "GameInfo" ) )->setVisible( false );
 				cache.find( cuT( "Regles" ) )->setVisible( false );
 				cache.find( cuT( "WinGame" ) )->setVisible( false );
 				cache.find( cuT( "LoseGame" ) )->setVisible( false );
@@ -104,7 +111,7 @@ namespace gratz_paire
 				cache.find( cuT( "Title" ) )->setVisible( false );
 				cache.find( cuT( "Menu" ) )->setVisible( false );
 				cache.find( cuT( "MenuInGame" ) )->setVisible( true );
-				cache.find( cuT( "Errors" ) )->setVisible( true );
+				cache.find( cuT( "GameInfo" ) )->setVisible( true );
 				cache.find( cuT( "Regles" ) )->setVisible( false );
 				cache.find( cuT( "WinGame" ) )->setVisible( false );
 				cache.find( cuT( "LoseGame" ) )->setVisible( false );
@@ -123,7 +130,7 @@ namespace gratz_paire
 				cache.find( cuT( "Title" ) )->setVisible( false );
 				cache.find( cuT( "Menu" ) )->setVisible( true );
 				cache.find( cuT( "MenuInGame" ) )->setVisible( false );
-				cache.find( cuT( "Errors" ) )->setVisible( true );
+				cache.find( cuT( "GameInfo" ) )->setVisible( true );
 				cache.find( cuT( "Regles" ) )->setVisible( false );
 				cache.find( cuT( "WinGame" ) )->setVisible( false );
 				cache.find( cuT( "LoseGame" ) )->setVisible( false );
@@ -142,7 +149,7 @@ namespace gratz_paire
 				cache.find( cuT( "Title" ) )->setVisible( false );
 				cache.find( cuT( "Menu" ) )->setVisible( false );
 				cache.find( cuT( "MenuInGame" ) )->setVisible( true );
-				cache.find( cuT( "Errors" ) )->setVisible( true );
+				cache.find( cuT( "GameInfo" ) )->setVisible( true );
 				cache.find( cuT( "Regles" ) )->setVisible( false );
 				cache.find( cuT( "WinGame" ) )->setVisible( false );
 				cache.find( cuT( "LoseGame" ) )->setVisible( false );
@@ -161,7 +168,7 @@ namespace gratz_paire
 				cache.find( cuT( "Title" ) )->setVisible( false );
 				cache.find( cuT( "Menu" ) )->setVisible( false );
 				cache.find( cuT( "MenuInGame" ) )->setVisible( false );
-				cache.find( cuT( "Errors" ) )->setVisible( false );
+				cache.find( cuT( "GameInfo" ) )->setVisible( false );
 				cache.find( cuT( "Regles" ) )->setVisible( true );
 				cache.find( cuT( "WinGame" ) )->setVisible( false );
 				cache.find( cuT( "LoseGame" ) )->setVisible( false );
@@ -180,7 +187,7 @@ namespace gratz_paire
 				cache.find( cuT( "Title" ) )->setVisible( false );
 				cache.find( cuT( "Menu" ) )->setVisible( true );
 				cache.find( cuT( "MenuInGame" ) )->setVisible( false );
-				cache.find( cuT( "Errors" ) )->setVisible( true );
+				cache.find( cuT( "GameInfo" ) )->setVisible( true );
 				cache.find( cuT( "Regles" ) )->setVisible( false );
 				cache.find( cuT( "WinGame" ) )->setVisible( false );
 				cache.find( cuT( "LoseGame" ) )->setVisible( true );
@@ -190,7 +197,7 @@ namespace gratz_paire
 			} ) );
 	}
 
-	void Hud::win()
+	void Hud::winLevel()
 	{
 		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
 			, [this]()
@@ -199,7 +206,26 @@ namespace gratz_paire
 				cache.find( cuT( "Title" ) )->setVisible( false );
 				cache.find( cuT( "Menu" ) )->setVisible( true );
 				cache.find( cuT( "MenuInGame" ) )->setVisible( false );
-				cache.find( cuT( "Errors" ) )->setVisible( true );
+				cache.find( cuT( "GameInfo" ) )->setVisible( true );
+				cache.find( cuT( "Regles" ) )->setVisible( false );
+				cache.find( cuT( "WinGame" ) )->setVisible( true );
+				cache.find( cuT( "LoseGame" ) )->setVisible( false );
+				cache.find( cuT( "Menu/Continuer" ) )->setVisible( true );
+				cache.find( cuT( "Menu/Recommencer" ) )->setVisible( false );
+				cache.find( cuT( "Menu/Jouer" ) )->setVisible( false );
+			} ) );
+	}
+
+	void Hud::winGame()
+	{
+		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
+			, [this]()
+			{
+				auto & cache = m_scene.getEngine()->getOverlayCache();
+				cache.find( cuT( "Title" ) )->setVisible( false );
+				cache.find( cuT( "Menu" ) )->setVisible( true );
+				cache.find( cuT( "MenuInGame" ) )->setVisible( false );
+				cache.find( cuT( "GameInfo" ) )->setVisible( true );
 				cache.find( cuT( "Regles" ) )->setVisible( false );
 				cache.find( cuT( "WinGame" ) )->setVisible( true );
 				cache.find( cuT( "LoseGame" ) )->setVisible( false );
@@ -209,14 +235,26 @@ namespace gratz_paire
 			} ) );
 	}
 
-	void Hud::update( uint32_t errors )
+	void Hud::update( uint32_t errors
+		, uint32_t maxErrors )
 	{
 		auto engine = m_scene.getEngine();
 		engine->postEvent( MakeFunctorEvent( EventType::ePreRender
-			, [engine, errors]()
+			, [engine, errors, maxErrors]()
 			{
 				auto & cache = engine->getOverlayCache();
-				cache.find( cuT( "Errors/Value" ) )->getTextOverlay()->setCaption( string::toString( errors ) );
+				cache.find( cuT( "Errors/Value" ) )->getTextOverlay()->setCaption( string::toString( errors ) + cuT( " / " ) + string::toString( maxErrors )  );
+			} ) );
+	}
+
+	void Hud::update( uint32_t score )
+	{
+		auto engine = m_scene.getEngine();
+		engine->postEvent( MakeFunctorEvent( EventType::ePreRender
+			, [engine, score]()
+			{
+				auto & cache = engine->getOverlayCache();
+				cache.find( cuT( "Score/Value" ) )->getTextOverlay()->setCaption( string::toString( score ) );
 			} ) );
 	}
 }

@@ -8,6 +8,7 @@ See licence file in root folder, MIT.txt
 #include "Audio.hpp"
 #include "Card.hpp"
 #include "Hud.hpp"
+#include "Level.hpp"
 
 namespace gratz_paire
 {
@@ -117,7 +118,6 @@ namespace gratz_paire
 		void doCreateSounds();
 		void doLoadNodes();
 		void doLoadCards();
-		void doPrepareCards();
 		void doRevealCards();
 		void doHideCards();
 		bool doIsPair();
@@ -137,10 +137,11 @@ namespace gratz_paire
 		Clock::time_point m_saved;
 		castor::Milliseconds m_elapsed;
 		std::atomic< State > m_state;
-		uint32_t m_errors;
-		uint32_t m_ok;
 		std::map< castor3d::GeometrySPtr, Card > m_selected;
 		std::map< castor3d::GeometrySPtr, Card > m_revealed;
+		std::vector< Level > m_levels;
+		uint32_t m_level{ 0u };
+		uint32_t m_score{ 0u };
 	};
 }
 

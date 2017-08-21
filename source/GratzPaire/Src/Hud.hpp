@@ -64,12 +64,23 @@ namespace gratz_paire
 		*\brief
 		*	Shows "Win" HUD.
 		*/
-		void win();
+		void winLevel();
+		/**
+		*\brief
+		*	Shows "Win" HUD.
+		*/
+		void winGame();
 		/**
 		*\brief
 		*	Updates error count.
 		*/
-		void update( uint32_t errors );
+		void update( uint32_t errors
+			, uint32_t maxErrors );
+		/**
+		*\brief
+		*	Updates the score.
+		*/
+		void update( uint32_t score );
 
 	private:
 		Game & m_game;

@@ -16,7 +16,9 @@ See licence file in root folder, MIT.txt
 
 namespace gratz_paire
 {
+#if defined( CASTOR_PLATFORM_WINDOWS )
 	bool checkError( FMOD_RESULT result );
+#endif
 	/**
 	*\brief
 	*	Handles one sound.
@@ -60,6 +62,7 @@ namespace gratz_paire
 	public:
 		OnEnd onPlayEnd;
 
+#if defined( CASTOR_PLATFORM_WINDOWS )
 	private:
 		static FMOD_RESULT callback( FMOD_CHANNELCONTROL * channelControl
 			, FMOD_CHANNELCONTROL_TYPE controlType
@@ -68,7 +71,6 @@ namespace gratz_paire
 			, void * commandData2 );
 
 	private:
-#if defined( CASTOR_PLATFORM_WINDOWS )
 		FMOD::Sound * m_sound = nullptr;
 		FMOD::Channel * m_channel = nullptr;
 		FMOD::System * m_system = nullptr;

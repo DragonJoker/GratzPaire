@@ -45,6 +45,72 @@ namespace gratz_paire
 		doLoadNodes();
 		doLoadCards();
 		m_audio.playSound( uint32_t( SoundId::eMusic ) );
+		m_levels.emplace_back( m_scene
+			, cuT( "Captain obvious" )
+			, 4u
+			, 3u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "Sometimes it hurts" )
+			, 4u
+			, 2u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "Let's start the game" )
+			, 6u
+			, 3u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "Has it started already?" )
+			, 6u
+			, 2u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "Having fun?" )
+			, 8u
+			, 3u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "Try this one!" )
+			, 8u
+			, 2u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "A bit tougher" )
+			, 10u
+			, 3u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "Niark niark niark!" )
+			, 10u
+			, 2u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "A bit more!" )
+			, 12u
+			, 4u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "Are you sure you want more?" )
+			, 12u
+			, 3u
+			, m_nodes
+			, m_cards );
+		m_levels.emplace_back( m_scene
+			, cuT( "Go to hell!" )
+			, 12u
+			, 3u
+			, m_nodes
+			, m_cards );
 	}
 
 	void Game::reset()
@@ -52,7 +118,8 @@ namespace gratz_paire
 		m_state = State::eStarted;
 		m_selected.clear();
 		m_revealed.clear();
-		doPrepareCards();
+		m_level = 0u;
+		m_score = 0u;
 	}
 
 	void Game::start()
@@ -60,9 +127,10 @@ namespace gratz_paire
 		m_state = State::eStarted;
 		m_hud.start();
 		m_saved = Clock::now();
-		m_errors = 0u;
-		m_ok = 0u;
-		doPrepareCards();
+		m_levels[m_level].initialise();
+		m_hud.update( m_levels[m_level].getErrors()
+			, m_levels[m_level].getMaxErrors() );
+		m_hud.update( m_score );
 	}
 
 	void Game::pause()
@@ -184,6 +252,11 @@ namespace gratz_paire
 		m_nodes.push_back( nodes.find( cuT( "Carte_10" ) ) );
 		m_nodes.push_back( nodes.find( cuT( "Carte_11" ) ) );
 		m_nodes.push_back( nodes.find( cuT( "Carte_12" ) ) );
+
+		for ( auto & node : m_nodes )
+		{
+			node->setVisible( false );
+		}
 	}
 
 	void Game::doLoadCards()
@@ -202,26 +275,11 @@ namespace gratz_paire
 		m_cards.emplace( geometries.find( cuT( "Carte_10_Verso" ) ), geometries.find( cuT( "Carte_10_Recto" ) ) );
 		m_cards.emplace( geometries.find( cuT( "Carte_11_Verso" ) ), geometries.find( cuT( "Carte_11_Recto" ) ) );
 		m_cards.emplace( geometries.find( cuT( "Carte_12_Verso" ) ), geometries.find( cuT( "Carte_12_Recto" ) ) );
-	}
 
-	void Game::doPrepareCards()
-	{
-		for ( auto & node : m_nodes )
+		for ( auto & pair : m_cards )
 		{
-			node->setOrientation( Quaternion::fromAxisAngle( Point3f{ 0, 0, 0 }, 0.0_degrees ) );
-		}
-
-		static std::random_device rd;
-		std::mt19937 g( rd() );
-
-		std::shuffle( m_nodes.begin(), m_nodes.end(), g );
-		auto it = m_nodes.begin();
-
-		for ( auto & card : m_cards )
-		{
-			card.first->getParent()->attachTo( *it );
-			card.second->getParent()->attachTo( *it );
-			++it;
+			pair.first->getParent()->detach();
+			pair.second->getParent()->detach();
 		}
 	}
 
@@ -260,43 +318,55 @@ namespace gratz_paire
 	bool Game::doIsPair()
 	{
 		REQUIRE( m_revealed.size() == 2u );
-		auto it = m_revealed.begin();
-		auto index1 = doGetIndex( it->first->getName() );
-		++it;
-		auto index2 = doGetIndex( it->first->getName() );
-
-		return ( std::max( index2, index1 ) - std::min( index2, index1 ) == m_cards.size() / 2u );
+		auto it2 = m_revealed.begin();
+		auto it1 = it2++;
+		return m_levels[m_level].isPair( it1->first, it2->first );
 	}
 
 	void Game::doSuccess()
 	{
 		m_selected.clear();
 		m_revealed.clear();
-		m_ok += 2u;
 
-		if ( m_ok == m_cards.size() )
+		if ( m_levels[m_level].success() )
 		{
-			m_state = State::eEnded;
-			m_hud.win();
+			auto score = m_levels[m_level].getScore() * 10;
+			++m_level;
+			m_score += score * m_level;
+
 			m_audio.stopSound( uint32_t( SoundId::eMusic ) );
 			m_audio.playSound( uint32_t( SoundId::eWin ) );
+
+			if ( m_level == m_levels.size() )
+			{
+				m_state = State::eEnded;
+				m_hud.winGame();
+			}
+			else
+			{
+				m_hud.winLevel();
+				m_hud.update( m_score );
+			}
 		}
 	}
 
 	void Game::doError()
 	{
 		auto it = m_revealed.begin();
+		bool gameOver = false;
+
 		if ( it->second.isRevealed()
 			&& ( ++it )->second.isRevealed() )
 		{
 			m_audio.playSound( uint32_t( SoundId::eCard ) );
 			m_audio.playSound( uint32_t( SoundId::eCard ) );
-			++m_errors;
-			m_hud.update( m_errors );
+			gameOver = m_levels[m_level].error();
+			m_hud.update( m_levels[m_level].getErrors()
+				, m_levels[m_level].getMaxErrors() );
 			m_audio.playSound( uint32_t( SoundId::eError ) );
 		}
 
-		if ( m_errors >= MaxErrors )
+		if ( gameOver )
 		{
 			m_state = State::eEnded;
 			m_hud.gameOver();
