@@ -28,10 +28,11 @@ namespace gratz_paire
 				if ( !wxGetApp().getCastor().isCleaned() )
 				{
 					game.update();
-					wxGetApp().getCastor().postEvent( MakeFunctorEvent( EventType::ePostRender, [&game]()
-					{
-						doUpdate( game );
-					} ) );
+					wxGetApp().getCastor().postEvent( makeFunctorEvent( EventType::ePostRender
+						, [&game]()
+						{
+							doUpdate( game );
+						} ) );
 				}
 			}
 		}
@@ -106,10 +107,11 @@ namespace gratz_paire
 #endif
 
 				engine.getRenderLoop().beginRendering();
-				engine.postEvent( MakeFunctorEvent( EventType::ePostRender, [this]()
-				{
-					doUpdate( *m_game );
-				} ) );
+				engine.postEvent( makeFunctorEvent( EventType::ePostRender
+					, [this]()
+					{
+						doUpdate( *m_game );
+					} ) );
 			}
 		}
 

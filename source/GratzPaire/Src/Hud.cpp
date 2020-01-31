@@ -85,7 +85,7 @@ namespace gratz_paire
 
 	void Hud::mainMenu()
 	{
-		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
+		m_scene.getEngine()->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [this]()
 			{
 				auto & cache = m_scene.getEngine()->getOverlayCache();
@@ -104,7 +104,7 @@ namespace gratz_paire
 
 	void Hud::start()
 	{
-		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
+		m_scene.getEngine()->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [this]()
 			{
 				auto & cache = m_scene.getEngine()->getOverlayCache();
@@ -123,7 +123,7 @@ namespace gratz_paire
 
 	void Hud::pause()
 	{
-		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
+		m_scene.getEngine()->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [this]()
 			{
 				auto & cache = m_scene.getEngine()->getOverlayCache();
@@ -142,7 +142,7 @@ namespace gratz_paire
 
 	void Hud::resume()
 	{
-		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
+		m_scene.getEngine()->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [this]()
 			{
 				auto & cache = m_scene.getEngine()->getOverlayCache();
@@ -161,7 +161,7 @@ namespace gratz_paire
 
 	void Hud::help()
 	{
-		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
+		m_scene.getEngine()->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [this]()
 			{
 				auto & cache = m_scene.getEngine()->getOverlayCache();
@@ -180,7 +180,7 @@ namespace gratz_paire
 
 	void Hud::gameOver()
 	{
-		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
+		m_scene.getEngine()->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [this]()
 			{
 				auto & cache = m_scene.getEngine()->getOverlayCache();
@@ -199,7 +199,7 @@ namespace gratz_paire
 
 	void Hud::winLevel()
 	{
-		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
+		m_scene.getEngine()->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [this]()
 			{
 				auto & cache = m_scene.getEngine()->getOverlayCache();
@@ -218,7 +218,7 @@ namespace gratz_paire
 
 	void Hud::winGame()
 	{
-		m_scene.getEngine()->postEvent( MakeFunctorEvent( EventType::ePreRender
+		m_scene.getEngine()->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [this]()
 			{
 				auto & cache = m_scene.getEngine()->getOverlayCache();
@@ -239,7 +239,7 @@ namespace gratz_paire
 		, uint32_t maxErrors )
 	{
 		auto engine = m_scene.getEngine();
-		engine->postEvent( MakeFunctorEvent( EventType::ePreRender
+		engine->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [engine, errors, maxErrors]()
 			{
 				auto & cache = engine->getOverlayCache();
@@ -250,7 +250,7 @@ namespace gratz_paire
 	void Hud::update( uint32_t score )
 	{
 		auto engine = m_scene.getEngine();
-		engine->postEvent( MakeFunctorEvent( EventType::ePreRender
+		engine->postEvent( makeFunctorEvent( EventType::ePreRender
 			, [engine, score]()
 			{
 				auto & cache = engine->getOverlayCache();

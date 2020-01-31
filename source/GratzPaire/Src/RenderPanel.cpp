@@ -233,7 +233,7 @@ namespace gratz_paire
 						m_y = doTransformY( p_event.GetY() );
 						m_oldX = m_x;
 						m_oldY = m_y;
-						m_listener->postEvent( MakeFunctorEvent( EventType::ePreRender
+						m_listener->postEvent( makeFunctorEvent( EventType::ePreRender
 							, [this, window]()
 							{
 								Camera & l_camera = *window->getCamera();

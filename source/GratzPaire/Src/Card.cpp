@@ -57,20 +57,34 @@ namespace gratz_paire
 		static Quaternion const src{ Quaternion::fromAxisAngle( Point3r{ 1, 0, 0 }, 180.0_degrees ) };
 		static Quaternion const dst{ Quaternion::fromAxisAngle( Point3r{ 0, 0, 0 }, 0.0_degrees ) };
 		static Milliseconds const time{ 500_ms };
+		static Milliseconds const waitTime{ 1000_ms };
 
 		if ( isRevealed() )
 		{
 			m_total = 0_ms;
-			m_state = State::eHiding;
+			m_state = State::eWaitHide;
 		}
 		else
 		{
 			m_total += elapsed;
 		}
 
-		bool result = doSwipe( src
-			, dst
-			, time );
+		bool result = false;
+
+		if ( m_state == State::eWaitHide )
+		{
+			if ( m_total >= waitTime )
+			{
+				m_total = 0_ms;
+				m_state = State::eHiding;
+			}
+		}
+		else
+		{
+			result = doSwipe( src
+				, dst
+				, time );
+		}
 
 		if ( result )
 		{
@@ -86,11 +100,11 @@ namespace gratz_paire
 	{
 		auto cur = m_interpolator.interpolate( src, dst, float( m_total.count() ) / float( maxTime.count() ) );
 		auto node = m_node;
-		m_node->getScene()->getEngine()->postEvent( MakeFunctorEvent( EventType::ePostRender
+		m_node->getScene()->getEngine()->postEvent( makeFunctorEvent( EventType::ePostRender
 			, [node, cur]()
-		{
-			node->setOrientation( cur );
-		} ) );
+			{
+				node->setOrientation( cur );
+			} ) );
 		return m_total >= maxTime;
 	}
 }

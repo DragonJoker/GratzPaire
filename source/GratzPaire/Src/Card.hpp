@@ -23,6 +23,7 @@ namespace gratz_paire
 			eHidden,
 			eRevealing,
 			eRevealed,
+			eWaitHide,
 			eHiding,
 		};
 
