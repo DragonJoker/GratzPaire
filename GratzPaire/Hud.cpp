@@ -94,8 +94,8 @@ namespace gratz_paire
 				cache.find( cuT( "WinGame" ) ).lock()->setVisible( false );
 				cache.find( cuT( "LoseGame" ) ).lock()->setVisible( false );
 				cache.find( cuT( "Menu/Continuer" ) ).lock()->setVisible( false );
-				cache.find( cuT( "Menu/Recommencer" ) ).lock()->setVisible( false );
-				cache.find( cuT( "Menu/Jouer" ) ).lock()->setVisible( true );
+				cache.find( cuT( "Menu/Recommencer" ) ).lock()->setVisible( m_game.isGameOver() );
+				cache.find( cuT( "Menu/Jouer" ) ).lock()->setVisible( !m_game.isGameOver() );
 			} ) );
 	}
 

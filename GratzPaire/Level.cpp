@@ -70,27 +70,33 @@ namespace gratz_paire
 
 		for ( auto & node : m_allNodes )
 		{
-			node->setOrientation( castor::Quaternion::fromAxisAngle( castor::Point3f{ 1, 0, 0 }, 180.0_degrees ) );
-			node->setVisible( false );
-		}
-
-		for ( auto & node : m_nodes )
-		{
-			node->setVisible( true );
+			node->getScene()->getEngine()->postEvent( castor3d::makeCpuFunctorEvent( castor3d::EventType::ePostRender
+				, [node]()
+				{
+					node->setVisible( false );
+				} ) );
 		}
 
 		std::random_device rd;
 		std::mt19937 g( rd() );
 
 		std::shuffle( m_nodes.begin(), m_nodes.end(), g );
-		auto it = m_nodes.begin();
+		auto it = m_cards.begin();
 
-		for ( auto & card : m_cards )
+		for ( auto & node : m_nodes )
 		{
-			card.recto->getParent()->attachTo( **it );
-			card.verso->getParent()->attachTo( **it );
-			card.recto->getParent()->setVisible( true );
-			card.verso->getParent()->setVisible( true );
+			auto recto = it->recto;
+			auto verso = it->verso;
+			node->getScene()->getEngine()->postEvent( castor3d::makeCpuFunctorEvent( castor3d::EventType::ePostRender
+				, [node, recto, verso]()
+				{
+					node->setOrientation( castor::Quaternion::fromAxisAngle( castor::Point3f{ 1, 0, 0 }, 180.0_degrees ) );
+					node->setVisible( true );
+					recto->getParent()->attachTo( *node );
+					verso->getParent()->attachTo( *node );
+					recto->getParent()->setVisible( true );
+					verso->getParent()->setVisible( true );
+				} ) );
 			++it;
 		}
 	}

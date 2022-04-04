@@ -310,7 +310,7 @@ namespace gratz_paire
 
 			if ( m_level == m_levels.size() )
 			{
-				m_state = State::eEnded;
+				m_state = State::eWin;
 				m_hud.winGame();
 			}
 			else
@@ -339,7 +339,7 @@ namespace gratz_paire
 
 		if ( gameOver )
 		{
-			m_state = State::eEnded;
+			m_state = State::eGameOver;
 			m_hud.gameOver();
 			m_audio.playSound( uint32_t( SoundId::eGameOver ) );
 		}

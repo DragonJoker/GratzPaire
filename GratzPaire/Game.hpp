@@ -24,7 +24,9 @@ namespace gratz_paire
 			eInitial,
 			eStarted,
 			ePaused,
-			eEnded,
+			eWin,
+			eGameOver,
+			eEnded = eWin,
 		};
 
 	public:
@@ -76,15 +78,16 @@ namespace gratz_paire
 		*\return
 		*	\p true if the game is started.
 		*/
-		inline bool isStarted()const
+		bool isStarted()const
 		{
-			return m_state >= State::eStarted && m_state < State::eEnded;
+			return m_state >= State::eStarted
+				&& m_state < State::eEnded;
 		}
 		/**
 		*\return
 		*	\p true if the game is started and running.
 		*/
-		inline bool isRunning()const
+		bool isRunning()const
 		{
 			return m_state == State::eStarted;
 		}
@@ -92,15 +95,23 @@ namespace gratz_paire
 		*\return
 		*	\p true if the game is ended.
 		*/
-		inline bool isEnded()const
+		bool isEnded()const
 		{
 			return m_state == State::eEnded;
 		}
 		/**
 		*\return
+		*	\p true if the game is ended.
+		*/
+		bool isGameOver()const
+		{
+			return m_state == State::eGameOver;
+		}
+		/**
+		*\return
 		*	\p true if the game is paused.
 		*/
-		inline bool isPaused()const
+		bool isPaused()const
 		{
 			return m_state == State::ePaused;
 		}

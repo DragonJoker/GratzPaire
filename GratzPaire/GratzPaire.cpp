@@ -249,53 +249,17 @@ namespace gratz_paire
 
 		bool GratzPaire::doParseCommandLine()
 		{
-			wxCmdLineParser parser( wxApp::argc, wxApp::argv );
-			parser.AddSwitch( wxT( "h" ), wxT( "help" ), _( "Displays this help" ) );
-			parser.AddOption( wxT( "l" ), wxT( "log" ), _( "Defines log level" ), wxCMD_LINE_VAL_NUMBER );
-			parser.AddParam( _( "The initial scene file" ), wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL );
-			parser.AddSwitch( wxT( "opengl" ), wxEmptyString, _( "Defines the renderer to OpenGl" ) );
-			parser.AddSwitch( wxT( "test" ), wxEmptyString, _( "Defines the renderer to Test" ) );
-			bool result = parser.Parse( false ) == 0;
+			bool result = true;
 
-			// S'il y avait des erreurs ou "-h" ou "--help", on affiche l'aide et on sort
-			if ( !result || parser.Found( wxT( 'h' ) ) )
+			try
 			{
-				parser.Usage();
-				result = false;
+				main::Options options{ wxApp::argc, wxApp::argv };
+				options.read( m_config );
+				castor::Logger::initialise( m_config.log );
 			}
-
-			if ( result )
+			catch ( bool )
 			{
-				auto logLevel = castor::LogType::eCount;
-				long log;
-
-				if ( !parser.Found( wxT( "l" ), &log ) )
-				{
-					logLevel = DefaultLogType;
-				}
-				else
-				{
-					logLevel = castor::LogType( log );
-				}
-
-				castor::Logger::initialise( logLevel );
-
-				if ( parser.Found( wxT( "opengl" ) ) )
-				{
-					m_rendererType = cuT( "opengl" );
-				}
-
-				if ( parser.Found( wxT( "test" ) ) )
-				{
-					m_rendererType = cuT( "test" );
-				}
-
-				wxString l_strFileName;
-
-				if ( parser.GetParamCount() > 0 )
-				{
-					m_fileName = parser.GetParam( 0 ).ToStdString();
-				}
+				result = false;
 			}
 
 			return result;
@@ -374,7 +338,10 @@ namespace gratz_paire
 			}
 			else
 			{
-				CU_Exception( "Renderer plugin " + m_config.rendererName + " not found" );
+				m_castor->loadRenderer( castor3d::Renderer{ *m_castor
+					, m_castor->getRenderersList().getSelectedPlugin()
+					, {}
+					, m_config.gpuIndex } );
 			}
 
 			result = true;

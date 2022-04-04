@@ -83,6 +83,7 @@ if( wxWidgets_FOUND AND GTK_FOUND )
 			ashes::ashesCommon
 			ashes::ashes
 			ashes::ashespp
+			ashes::ashesVkRenderer
 			sdw::ShaderAST
 			sdw::ShaderWriter
 			sdw::CompilerGlsl
